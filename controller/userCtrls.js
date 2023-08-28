@@ -194,7 +194,22 @@ const createUser = asyncHandler(
       } catch (error) {
          throw new Error(error);
       }
-   })
+   });
+
+   //update password
+   const updatePassword = asyncHandler(async(req,res)=>{
+      const {_id} = req.user;
+      const {password} = req.body;
+      validateMongoDbId(_id);
+      const user = await User.findById(_id);
+      if (password) {
+         user.password = password;
+         const updatedPassword = await user.save();
+         res.json(updatedPassword);
+      } else {
+         res.json(user);
+      }
+   });
    
 
-module.exports = {createUser, loginUser, getallUser, getaUser, deleteaUser, updateaUser, blockUser, unblockUser,  handleRefreshToken, logOut};
+module.exports = {createUser, loginUser, getallUser, getaUser, deleteaUser, updateaUser, blockUser, unblockUser,  handleRefreshToken, logOut, updatePassword};
