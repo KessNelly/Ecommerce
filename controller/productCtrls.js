@@ -158,7 +158,7 @@ const rating = asyncHandler(async (req, res)=>{
 
     // for this, we need 3 things- id, star and prodId
     const { _id} = req.user;
-    const { star, prodId} = req.body;
+    const { star, prodId, comment} = req.body;
     try {
         const product = await Product.findById(prodId); //find the product with the id
 
@@ -172,7 +172,7 @@ const rating = asyncHandler(async (req, res)=>{
                         ratings: { $elemMatch: alreadyRated},
                     },
                     {
-                        $set: { "ratings.$.star": star},
+                        $set: { "ratings.$.star": star, "ratings.$.comment": comment},
                     },
                     {
                         new:true,
@@ -184,6 +184,7 @@ const rating = asyncHandler(async (req, res)=>{
                     $push: {
                         ratings: {
                             star: star,
+                            comment: comment,
                             postedby: _id,
                         },
                     },
