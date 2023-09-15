@@ -3,6 +3,8 @@ const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 const slugify = require ("slugify");
 const validateMongoDbId = require('../utils/validateMongodbid');
+const cloudinaryUploadImg = require("../utils/cloudinary");
+const fs = require('fs');
 
 //create new product
 const createProduct = asyncHandler(async(req, res)=>{
@@ -215,30 +217,36 @@ const rating = asyncHandler(async (req, res)=>{
 
 });
 
-//filter product
-// const filterProduct = asyncHandler(async(req, res)=>{
-//     const{ minprice, maxprice, color, category, availability, brand} = 
-//     req.params;
-//     console.log(req.query);
+const uploadImages = asyncHandler(async (req, res)=>{
+   // console.log(req.files);
 
-//    try {
-//     const filterProduct = await Product.find({
-//         price: {
-//             $gte: minprice,
-//             $lte: maxprice,
-//         },
-//         category,
-//         brand,
-//         color,
-//     });
-//     res.json({filterProduct});
-//    } catch (error) {
-//     res.json(error);
-//    }
+    const {id} = req.params;
+    validateMongoDbId(id);
+    try {
+        const uploader = (path)=> cloudinaryUploadImg(path, "images");
+        const urls = [];
+        const files = req.files;
+        for (const file of files) {
+            const {path} = file;
+            const newpath = await uploader(path);
+            urls.push(newpath);
+            fs.unlinkSync(path);
+        }
+        const findProduct = await Product.findByIdAndUpdate(id, {
+            images: urls.map((file)=> {
+                return file;
+            }),
+        },
+        {
+            new: true,
+        });
+        res.json(findProduct)
+    } catch (error) {
+        throw new Error (error)
 
-//    res.json({ minprice, maxprice, color, category, availability, brand});
-// });
+    }
+
+});
 
 
-
-module.exports = {createProduct, getaProduct, getallProduct, updateaProduct,deleteProduct, addToWishList, rating}
+module.exports = {createProduct, getaProduct, getallProduct, updateaProduct,deleteProduct, addToWishList, rating, uploadImages}
